@@ -47,6 +47,7 @@ private slots:
     void openSelectedAttachments();
     void updateButtonsVisible();
     void updateButtonsEnabled();
+    void attachmentModifiedExternally(const QString& key, const QString& filePath);
 
 private:
     bool insertAttachments(const QStringList& fileNames, QString& errorMessage);
