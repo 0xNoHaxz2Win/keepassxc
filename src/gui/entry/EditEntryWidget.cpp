@@ -27,17 +27,11 @@
 #include <QButtonGroup>
 #include <QColorDialog>
 #include <QDesktopServices>
-#include <QEvent>
 #include <QMenu>
-#include <QMimeData>
 #include <QSortFilterProxyModel>
-#include <QStackedLayout>
-#include <QStandardPaths>
 #include <QStringListModel>
-#include <QTemporaryFile>
 
 #include "autotype/AutoType.h"
-#include "core/Clock.h"
 #include "core/Config.h"
 #include "core/Database.h"
 #include "core/Entry.h"

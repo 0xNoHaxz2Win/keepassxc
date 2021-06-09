@@ -38,6 +38,7 @@ class EditWidgetIcons;
 class EditWidgetProperties;
 class Entry;
 class EntryAttributes;
+class EntryAttachments;
 class EntryAttributesModel;
 class EntryHistoryModel;
 class QButtonGroup;
