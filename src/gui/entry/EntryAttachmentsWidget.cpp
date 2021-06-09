@@ -88,6 +88,7 @@ void EntryAttachmentsWidget::linkAttachments(EntryAttachments* attachments)
                 SIGNAL(valueModifiedExternally(QString, QString)),
                 this,
                 SLOT(attachmentModifiedExternally(QString, QString)));
+        connect(m_entryAttachments, SIGNAL(modified()), this, SIGNAL(widgetUpdated()));
     }
 }
 
