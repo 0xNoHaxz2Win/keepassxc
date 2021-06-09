@@ -171,8 +171,8 @@ void EntryAttachments::disconnectAndEraseExternalFile(const QString& path)
         for (qint64 i = 0; i < (s / 128 + 1); ++i) {
             f.write(randomGen()->randomArray(128));
         }
+        f.close();
     }
-    f.close();
     f.remove();
 }
 
@@ -217,13 +217,13 @@ bool EntryAttachments::openAttachment(const QString& key, QString* errorMessage)
 {
     if (!m_openedAttachments.contains(key)) {
         const QByteArray attachmentData = value(key);
-        auto ext = key.contains(".") ? key.split(".").last() : "";
+        auto ext = key.contains(".") ? "." + key.split(".").last() : "";
 
 #ifdef KEEPASSXC_DIST_SNAP
         const QString tmpFileTemplate =
-            QString("%1/XXXXXXXXXXXX.%2").arg(QProcessEnvironment::systemEnvironment().value("SNAP_USER_DATA"), ext);
+            QString("%1/XXXXXXXXXXXX%2").arg(QProcessEnvironment::systemEnvironment().value("SNAP_USER_DATA"), ext);
 #else
-        const QString tmpFileTemplate = QDir::temp().absoluteFilePath(QString("XXXXXXXXXXXX.").append(ext));
+        const QString tmpFileTemplate = QDir::temp().absoluteFilePath(QString("XXXXXXXXXXXX").append(ext));
 #endif
 
         QTemporaryFile tmpFile(tmpFileTemplate);
