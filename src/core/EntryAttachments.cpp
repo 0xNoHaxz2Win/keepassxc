@@ -227,7 +227,7 @@ bool EntryAttachments::openAttachment(const QString& key, QString* errorMessage)
         m_openedAttachmentsInverse.insert(tmpFile.fileName(), key);
 
         auto watcher = QSharedPointer<FileWatcher>::create();
-        watcher->start(tmpFile.fileName());
+        watcher->start(tmpFile.fileName(), 5);
         connect(watcher.data(), &FileWatcher::fileChanged, this, &EntryAttachments::attachmentFileModified);
         m_attachmentFileWatchers.insert(tmpFile.fileName(), watcher);
     }

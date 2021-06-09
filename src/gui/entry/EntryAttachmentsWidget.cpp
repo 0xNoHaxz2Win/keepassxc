@@ -78,20 +78,26 @@ bool EntryAttachmentsWidget::isButtonsVisible() const
 
 void EntryAttachmentsWidget::linkAttachments(EntryAttachments* attachments)
 {
+    unlinkAttachments();
+
     m_entryAttachments = attachments;
     m_attachmentsModel->setEntryAttachments(m_entryAttachments);
 
     if (m_entryAttachments) {
-        connect(m_entryAttachments, SIGNAL(valueModifiedExternally(QString, QString)),
+        connect(m_entryAttachments,
+                SIGNAL(valueModifiedExternally(QString, QString)),
+                this,
                 SLOT(attachmentModifiedExternally(QString, QString)));
     }
 }
 
 void EntryAttachmentsWidget::unlinkAttachments()
 {
-    disconnect(m_entryAttachments);
-    m_entryAttachments = nullptr;
-    m_attachmentsModel->setEntryAttachments(nullptr);
+    if (m_entryAttachments) {
+        m_entryAttachments->disconnect(this);
+        m_entryAttachments = nullptr;
+        m_attachmentsModel->setEntryAttachments(nullptr);
+    }
 }
 
 void EntryAttachmentsWidget::setReadOnly(bool readOnly)
@@ -393,17 +399,19 @@ bool EntryAttachmentsWidget::eventFilter(QObject* watched, QEvent* e)
 
 void EntryAttachmentsWidget::attachmentModifiedExternally(const QString& key, const QString& filePath)
 {
-    auto result = MessageBox::question(this,
-                                       tr("Attachment modified"),
-                                       tr("The attachment '%1' was modified.\nDo you want to save the changes to your database?").arg(key),
-                                       MessageBox::Save | MessageBox::Discard,
-                                       MessageBox::Save);
+    auto result = MessageBox::question(
+        this,
+        tr("Attachment modified"),
+        tr("The attachment '%1' was modified.\nDo you want to save the changes to your database?").arg(key),
+        MessageBox::Save | MessageBox::Discard,
+        MessageBox::Save);
 
     if (result == MessageBox::Save) {
         QFile f(filePath);
         if (f.open(QFile::ReadOnly)) {
             m_entryAttachments->set(key, f.readAll());
             f.close();
+            emit widgetUpdated();
         } else {
             MessageBox::critical(this,
                                  tr("Saving attachment failed"),
