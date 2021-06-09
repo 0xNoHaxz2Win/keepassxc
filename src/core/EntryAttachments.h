@@ -22,6 +22,7 @@
 #include "core/ModifiableObject.h"
 
 #include <QHash>
+#include <QMap>
 #include <QObject>
 #include <QSharedPointer>
 
@@ -66,7 +67,7 @@ private slots:
 private:
     void disconnectAndEraseExternalFile(const QString& path);
 
-    QHash<QString, QByteArray> m_attachments;
+    QMap<QString, QByteArray> m_attachments;
     QHash<QString, QString> m_openedAttachments;
     QHash<QString, QString> m_openedAttachmentsInverse;
     QHash<QString, QSharedPointer<FileWatcher>> m_attachmentFileWatchers;
