@@ -23,6 +23,7 @@
 
 #include <QHash>
 #include <QObject>
+#include <QSharedPointer>
 
 class QStringList;
 
@@ -66,7 +67,7 @@ private:
     QHash<QString, QByteArray> m_attachments;
     QHash<QString, QString> m_openedAttachments;
     QHash<QString, QString> m_openedAttachmentsInverse;
-    FileWatcher m_attachmentFileWatcher;
+    QHash<QString, QSharedPointer<FileWatcher>> m_attachmentFileWatchers;
 };
 
 #endif // KEEPASSX_ENTRYATTACHMENTS_H

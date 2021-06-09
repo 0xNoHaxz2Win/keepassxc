@@ -31,7 +31,6 @@
 EntryAttachments::EntryAttachments(QObject* parent)
     : ModifiableObject(parent)
 {
-    connect(&m_attachmentFileWatcher, &FileWatcher::fileChanged, this, &EntryAttachments::attachmentFileModified);
 }
 
 EntryAttachments::~EntryAttachments()
@@ -148,7 +147,7 @@ void EntryAttachments::clear()
 
     // Overwrite all open attachment files with random data and then remove them
     for (auto& path : asConst(m_openedAttachments)) {
-        m_attachmentFileWatcher.removePath(path);
+        m_attachmentFileWatchers.value(path)->stop();
 
         QFile f(path);
         if (f.open(QFile::ReadWrite)) {
@@ -160,6 +159,7 @@ void EntryAttachments::clear()
         f.close();
         f.remove();
     }
+    m_attachmentFileWatchers.clear();
     m_openedAttachments.clear();
     m_openedAttachmentsInverse.clear();
 
@@ -225,7 +225,11 @@ bool EntryAttachments::openAttachment(const QString& key, QString* errorMessage)
         tmpFile.setAutoRemove(false);
         m_openedAttachments.insert(key, tmpFile.fileName());
         m_openedAttachmentsInverse.insert(tmpFile.fileName(), key);
-        m_attachmentFileWatcher.addPath(tmpFile.fileName());
+
+        auto watcher = QSharedPointer<FileWatcher>::create();
+        watcher->start(tmpFile.fileName());
+        connect(watcher.data(), &FileWatcher::fileChanged, this, &EntryAttachments::attachmentFileModified);
+        m_attachmentFileWatchers.insert(tmpFile.fileName(), watcher);
     }
 
     const bool openOk = QDesktopServices::openUrl(QUrl::fromLocalFile(m_openedAttachments.value(key)));
