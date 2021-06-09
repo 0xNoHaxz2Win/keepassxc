@@ -94,6 +94,10 @@ void EntryAttachments::remove(const QString& key)
 
     m_attachments.remove(key);
 
+    if (m_openedAttachments.contains(key)) {
+        disconnectAndEraseExternalFile(m_openedAttachments.value(key));
+    }
+
     emit removed(key);
     emitModified();
 }
@@ -104,19 +108,16 @@ void EntryAttachments::remove(const QStringList& keys)
         return;
     }
 
+    bool emitStatus = modifiedSignalEnabled();
+    setEmitModified(false);
+
     bool isModified = false;
     for (const QString& key : keys) {
-        if (!m_attachments.contains(key)) {
-            Q_ASSERT_X(
-                false, "EntryAttachments::remove", qPrintable(QString("Can't find attachment for key %1").arg(key)));
-            continue;
-        }
-
-        isModified = true;
-        emit aboutToBeRemoved(key);
-        m_attachments.remove(key);
-        emit removed(key);
+        isModified |= m_attachments.contains(key);
+        remove(key);
     }
+
+    setEmitModified(emitStatus);
 
     if (isModified) {
         emitModified();
@@ -145,32 +146,46 @@ void EntryAttachments::clear()
 
     m_attachments.clear();
 
-    // Overwrite all open attachment files with random data and then remove them
-    for (auto& path : asConst(m_openedAttachments)) {
-        m_attachmentFileWatchers.value(path)->stop();
-
-        QFile f(path);
-        if (f.open(QFile::ReadWrite)) {
-            qint64 s = f.size();
-            for (qint64 i = 0; i < (s / 128 + 1); ++i) {
-                f.write(randomGen()->randomArray(128));
-            }
-        }
-        f.close();
-        f.remove();
+    const auto externalPath = m_openedAttachments.values();
+    for (auto& path : externalPath) {
+        disconnectAndEraseExternalFile(path);
     }
-    m_attachmentFileWatchers.clear();
-    m_openedAttachments.clear();
-    m_openedAttachmentsInverse.clear();
 
     emit reset();
     emitModified();
+}
+
+void EntryAttachments::disconnectAndEraseExternalFile(const QString& path)
+{
+    if (m_openedAttachmentsInverse.contains(path)) {
+        m_attachmentFileWatchers.value(path)->stop();
+        m_attachmentFileWatchers.remove(path);
+
+        m_openedAttachments.remove(m_openedAttachmentsInverse.value(path));
+        m_openedAttachmentsInverse.remove(path);
+    }
+
+    QFile f(path);
+    if (f.open(QFile::ReadWrite)) {
+        qint64 s = f.size();
+        for (qint64 i = 0; i < (s / 128 + 1); ++i) {
+            f.write(randomGen()->randomArray(128));
+        }
+    }
+    f.close();
+    f.remove();
 }
 
 void EntryAttachments::copyDataFrom(const EntryAttachments* other)
 {
     if (*this != *other) {
         emit aboutToBeReset();
+
+        // Reset all externally opened files
+        const auto externalPath = m_openedAttachments.values();
+        for (auto& path : externalPath) {
+            disconnectAndEraseExternalFile(path);
+        }
 
         m_attachments = other->m_attachments;
 

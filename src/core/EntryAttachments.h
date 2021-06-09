@@ -64,6 +64,8 @@ private slots:
     void attachmentFileModified(const QString& path);
 
 private:
+    void disconnectAndEraseExternalFile(const QString& path);
+
     QHash<QString, QByteArray> m_attachments;
     QHash<QString, QString> m_openedAttachments;
     QHash<QString, QString> m_openedAttachmentsInverse;
